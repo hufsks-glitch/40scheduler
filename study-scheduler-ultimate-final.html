@@ -1,0 +1,2569 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study 4.0 Ultimate 학습 스케줄러 - 완전판</title>
+    <style>
+        :root {
+            /* 7단계 글씨 크기 */
+            --font-14: 14px;
+            --font-15: 15px;
+            --font-16: 16px;
+            --font-17: 17px;
+            --font-18: 18px;
+            --font-19: 19px;
+            --font-20: 20px;
+            --current-font-size: var(--font-15);
+            
+            /* 헤더 색상 변수 */
+            --header-color-light: #ff9966;
+            --header-color-dark: #ff6633;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            font-size: var(--current-font-size);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        /* 헤더 */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .header h1 {
+            color: #2e3f6e;
+            font-size: calc(var(--current-font-size) * 2.3);
+        }
+
+        /* 설정 패널 - 숨김/펼침 기능 */
+        .settings-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 1001;
+            border: 2px solid #FF69B4;
+            transition: all 0.3s ease;
+        }
+
+        .settings-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .settings-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+            border: 2px solid #FF69B4;
+            transition: all 0.3s ease;
+            transform: translateX(100%);
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .settings-panel.open {
+            transform: translateX(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .settings-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: calc(var(--current-font-size) * 1.1);
+            color: #666;
+        }
+
+        .settings-group {
+            margin-bottom: 12px;
+        }
+
+        .settings-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: calc(var(--current-font-size) * 0.9);
+            color: #666;
+        }
+
+        /* 섹션 스타일 */
+        .section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: calc(var(--current-font-size) * 1.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .orange-circle {
+            width: 20px;
+            height: 20px;
+            background: #ff9966;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* 간편 입력 섹션 */
+        .quick-input-section {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border: 2px solid #fdcb6e;
+        }
+
+        .quick-input-section textarea {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border: 2px solid #fdcb6e;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: var(--current-font-size);
+            resize: vertical;
+        }
+
+        /* 교재별 컨테이너 */
+        .subject-container {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .subject-container:hover {
+            border-color: #ff9966;
+            box-shadow: 0 2px 8px rgba(255, 153, 102, 0.2);
+        }
+
+        .subject-container.selected {
+            border-color: #ff6633;
+            border-width: 3px;
+            box-shadow: 0 4px 12px rgba(255, 102, 51, 0.3);
+        }
+
+        .subject-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .subject-info {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .subject-info input[type="text"] {
+            flex: 1;
+            min-width: 150px;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: var(--current-font-size);
+        }
+
+        .subject-info input[type="number"] {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: var(--current-font-size);
+        }
+
+        .subject-info select {
+            width: 80px;
+            padding: 8px;
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 4px;
+            font-size: var(--current-font-size);
+        }
+
+        /* 범위 관련 스타일 */
+        .ranges-container {
+            margin-bottom: 15px;
+        }
+
+        .range-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .add-range-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: calc(var(--current-font-size) * 0.9);
+            transition: all 0.2s;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .add-range-btn:hover {
+            background: #059669;
+        }
+
+        .remove-range-btn, .remove-subject-btn {
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: calc(var(--current-font-size) * 0.85);
+            transition: all 0.2s;
+        }
+
+        .remove-range-btn:hover, .remove-subject-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* 패턴 컨트롤 */
+        .pattern-controls {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .pattern-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pattern-row > span {
+            font-weight: bold;
+            color: #666;
+            min-width: 80px;
+        }
+
+        /* 패턴 버튼들 */
+        .pattern-btn {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: calc(var(--current-font-size) * 0.85);
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .pattern-btn.active {
+            background: #1e40af;
+            color: white;
+            border: 2px solid #1e40af;
+            box-shadow: 0 2px 4px rgba(30,64,175,0.3);
+        }
+
+        .individual-day-btn {
+            padding: 5px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: calc(var(--current-font-size) * 0.8);
+            min-width: 30px;
+            text-align: center;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .individual-day-btn.active {
+            background: #1e40af;
+            color: white;
+            border: 2px solid #1e40af;
+        }
+
+        /* 복습 버튼 */
+        .review-btn {
+            background: #1e40af;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .review-btn.disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .review-btn.active {
+            background: #dc2626;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* 일일 학습량 버튼 */
+        .daily-amount-btn {
+            padding: 5px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: calc(var(--current-font-size) * 0.85);
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .daily-amount-btn.active {
+            background: #f59e0b;
+            color: white;
+            border-color: #d97706;
+        }
+
+        /* 시각적 미리보기 - 3칸 구조 */
+        .preview-section {
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
+            border: 2px solid #f48fb1;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .preview-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .preview-header h3 {
+            color: #ad1457;
+            margin: 0;
+        }
+
+        .preview-content {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            gap: 20px;
+        }
+
+        /* 왼쪽 칸: 블록 시각화 */
+        .preview-blocks-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .preview-blocks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .week-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .day-block {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            border: 1px solid rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .day-block.non-study-day {
+            background: #e5e7eb;
+            color: #6b7280;
+            border-color: #d1d5db;
+        }
+
+        .day-block.review-day {
+            background: #e5e7eb !important;
+            position: relative;
+        }
+
+        .day-block.review-day::after {
+            content: "●";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #1e40af;
+            font-size: 16px;
+        }
+
+        /* 회독별 색상 - 핵심 시스템 */
+        .round-1 { background: #1e40af; }
+        .round-2 { background: #f59e0b; }
+        .round-3 { background: #10b981; }
+        .round-4 { background: #8b5cf6; }
+        .round-5 { background: #ef4444; }
+
+        .block-stats {
+            margin-top: 10px;
+            font-size: calc(var(--current-font-size) * 0.85);
+            color: #666;
+        }
+
+        /* 중간 칸: 축약 달력 계획표 */
+        .preview-calendar-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .compact-calendar {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: calc(var(--current-font-size) * 0.8);
+        }
+
+        .compact-calendar th {
+            background: #f3f4f6;
+            padding: 8px;
+            border: 1px solid #e5e7eb;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .compact-calendar td {
+            padding: 6px;
+            border: 1px solid #e5e7eb;
+            vertical-align: top;
+            min-height: 60px;
+            background: white;
+            text-align: center;
+        }
+
+        .compact-calendar .date-num {
+            font-weight: bold;
+            margin-bottom: 3px;
+            font-size: calc(var(--current-font-size) * 0.75);
+        }
+
+        .compact-calendar .task-text {
+            font-size: calc(var(--current-font-size) * 0.7);
+            line-height: 1.2;
+        }
+
+        .compact-calendar .review-cell {
+            background: #ffe4b5 !important;
+        }
+
+        /* 오른쪽 칸: 계산 상세 */
+        .preview-calculation {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: calc(var(--current-font-size) * 0.85);
+            white-space: pre-wrap;
+            color: #880e4f;
+            line-height: 1.6;
+        }
+
+        /* 버튼 스타일 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: var(--current-font-size);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #FF69B4, #ff1493);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,105,180,0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #6b7280;
+            border: 2px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+            background: #f3f4f6;
+        }
+
+        .btn-generate {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: calc(var(--current-font-size) * 1.2);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        /* 휴일 제외 캘린더 */
+        .exclude-calendar {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            margin-top: 15px;
+        }
+
+        .mini-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: calc(var(--current-font-size) * 0.9);
+            background: #f8f9fa;
+        }
+
+        .calendar-day:hover:not(.disabled) {
+            background: #e5e7eb;
+        }
+
+        .calendar-day.excluded {
+            background: #ef4444;
+            color: white;
+        }
+
+        .calendar-day.weekend {
+            background: #f3f4f6;
+        }
+
+        /* 최종 달력 스타일 */
+        .calendar-month {
+            margin-bottom: 40px;
+            page-break-inside: avoid;
+        }
+
+        .calendar-month h3 {
+            text-align: center;
+            color: #2e3f6e;
+            margin-bottom: 20px;
+            font-size: calc(var(--current-font-size) * 1.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .compact-final-calendar {
+            width: 100%;
+            border-collapse: collapse;
+            border: 2px solid #e5e7eb;
+            margin: 0 auto;
+            table-layout: auto;
+        }
+
+        .compact-final-calendar th {
+            background: linear-gradient(135deg, var(--header-color-light), var(--header-color-dark));
+            color: white;
+            padding: 12px;
+            border: 1px solid #ddd;
+            font-weight: bold;
+        }
+
+        .compact-final-calendar td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            vertical-align: top;
+            background: white;
+            transition: all 0.3s ease;
+            min-height: 80px;
+        }
+
+        .calendar-style-advanced2 td.weekend-sat {
+            background: #eff6ff;
+        }
+
+        .calendar-style-advanced2 td.weekend-sun {
+            background: #fef2f2;
+        }
+
+        .calendar-style-advanced2 .task:not(.print-mode)::before {
+            content: "🔹 ";
+            margin-right: 3px;
+        }
+
+        .calendar-style-advanced2 td:hover {
+            transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .date-num {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .task {
+            padding: 2px 4px;
+            margin: 1px 0;
+            border-radius: 3px;
+            font-size: calc(var(--current-font-size) * 0.75);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .task.review-task {
+            background: #ffe4b5 !important;
+        }
+
+        .task.print-mode::before {
+            content: "☐ ";
+            font-size: calc(var(--current-font-size) * 0.8);
+            margin-right: 3px;
+        }
+
+        /* 색상 클래스 */
+        .color0 { background: #ffcccb; }
+        .color1 { background: #fff2cc; }
+        .color2 { background: #d4edda; }
+        .color3 { background: #cce5ff; }
+        .color4 { background: #e6ccff; }
+        .color5 { background: #ffcc99; }
+
+        .other-month {
+            background: #f5f5f5 !important;
+            color: #999;
+        }
+
+        /* 헤더 색상 조합 */
+        .header-orange { --header-color-light: #ff9966; --header-color-dark: #ff6633; }
+        .header-redorange { --header-color-light: #ff6666; --header-color-dark: #ff3333; }
+        .header-pink { --header-color-light: #ff99cc; --header-color-dark: #ff6699; }
+        .header-blue { --header-color-light: #6699ff; --header-color-dark: #3366ff; }
+        .header-green { --header-color-light: #66cc66; --header-color-dark: #33cc33; }
+        .header-purple { --header-color-light: #9966ff; --header-color-dark: #6633ff; }
+
+        /* 통계 섹션 */
+        .stats-section {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+
+        .stats-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: calc(var(--current-font-size) * 0.9);
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #2e3f6e;
+            font-size: calc(var(--current-font-size) * 1.5);
+            font-weight: bold;
+        }
+
+        /* 알림 */
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        .hidden { display: none; }
+
+        /* 반응형 */
+        @media (max-width: 1200px) {
+            .preview-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .settings-toggle, .settings-panel {
+                position: static;
+                margin-bottom: 20px;
+            }
+        }
+
+        /* 프린트 스타일 */
+        @media print {
+            .settings-toggle,
+            .settings-panel,
+            .quick-input-section,
+            .section:not(.stats-section),
+            .btn,
+            .pattern-controls {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="header-orange">
+    <!-- 설정 토글 버튼 -->
+    <div class="settings-toggle" onclick="toggleSettings()">
+        ⚙️
+    </div>
+
+    <!-- 설정 패널 -->
+    <div class="settings-panel" id="settingsPanel">
+        <h3>⚙️ 설정</h3>
+        <div class="settings-group">
+            <label>달력 스타일</label>
+            <select id="calendarStyle" onchange="updateCalendarStyle()">
+                <option value="basic">기본형</option>
+                <option value="advanced">고급형1</option>
+                <option value="advanced2">고급형2</option>
+                <option value="elegant">세련형</option>
+            </select>
+        </div>
+        <div class="settings-group">
+            <label>글씨 크기</label>
+            <select id="fontSize" onchange="updateFontSize()">
+                <option value="14">14픽셀</option>
+                <option value="15" selected>15픽셀</option>
+                <option value="16">16픽셀</option>
+                <option value="17">17픽셀</option>
+                <option value="18">18픽셀</option>
+                <option value="19">19픽셀</option>
+                <option value="20">20픽셀</option>
+            </select>
+        </div>
+        <div class="settings-group">
+            <label>헤더 색상</label>
+            <select id="headerColor" onchange="updateHeaderColor()">
+                <option value="orange" selected>오렌지</option>
+                <option value="redorange">레드오렌지</option>
+                <option value="pink">핑크</option>
+                <option value="blue">블루</option>
+                <option value="green">그린</option>
+                <option value="purple">퍼플</option>
+            </select>
+        </div>
+        <div class="settings-group">
+            <label>
+                <input type="checkbox" id="printMode" onchange="togglePrintMode()">
+                프린트 모드
+            </label>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 500 500">
+                <circle cx="250" cy="250" r="240" fill="#FF69B4" />
+                <circle cx="250" cy="250" r="215" fill="none" stroke="#FFFFFF" stroke-width="35" />
+                <text x="250" y="176" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="82" fill="#FFFFFF" letter-spacing="2">STUDY</text>
+                <text x="60" y="400" font-family="Arial Rounded MT Bold, Arial, sans-serif" font-weight="900" font-size="280" fill="#FFFFFF">4</text>
+                <circle cx="350" cy="280" r="70" fill="none" stroke="#FFFFFF" stroke-width="40" />
+                <circle cx="250" cy="420" r="30" fill="#FFFFFF" />
+            </svg>
+            <h1>Study 4.0 Ultimate 학습 스케줄러 - 완전판</h1>
+        </div>
+
+        <!-- 알림 -->
+        <div id="alert" class="alert hidden"></div>
+
+        <!-- 간편 입력 -->
+        <div class="section quick-input-section">
+            <h3>📝 간편 입력 (선택사항)</h3>
+            <p style="margin-bottom: 10px; color: #2d3436;">
+                형식: 교재명, 시작-끝, 시작일, 종료일<br>
+                <span style="font-size: 0.9em;">💡 쉼표/탭/공백 모두 가능 | 날짜는 2025-09-10 또는 2025년 9월 10일 형식</span>
+            </p>
+            <textarea id="quickInput" placeholder="예시:
+인셉션 독해, 44-266, 2025-09-10, 2025-09-24
+인셉션 문학 개념어, 8-251, 2025-09-12, 2025-09-24"></textarea>
+            <button class="btn btn-primary" onclick="parseQuickInput()">
+                📋 파싱하여 아래 양식에 자동 입력
+            </button>
+        </div>
+
+        <!-- 전체 학습 기간 -->
+        <div class="section">
+            <h3>📅 전체 학습 기간 (기본값)</h3>
+            <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                <div>
+                    <label style="margin-right: 10px;">시작일:</label>
+                    <input type="date" id="globalStartDate" onchange="updateGlobalDates()">
+                </div>
+                <div>
+                    <label style="margin-right: 10px;">종료일:</label>
+                    <input type="date" id="globalEndDate" onchange="updateGlobalDates()">
+                </div>
+                <span style="color: #6b7280; font-size: calc(var(--current-font-size) * 0.9);">
+                    ※ 개별 설정하지 않은 교재는 이 기간을 사용합니다
+                </span>
+            </div>
+        </div>
+
+        <!-- 휴일 제외 설정 -->
+        <div class="section">
+            <h3>🚫 휴일 제외 설정</h3>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-secondary" onclick="toggleExcludeCalendar()">
+                    📅 제외 날짜 선택
+                </button>
+                <button class="btn btn-secondary" onclick="toggleWeekends()">
+                    주말 전체 제외/포함
+                </button>
+                <button class="btn btn-secondary" onclick="clearExcludedDates()">
+                    초기화
+                </button>
+                <span id="excludedCount" style="margin-left: auto; color: #ef4444; font-weight: bold;">
+                    제외된 날짜: 0일
+                </span>
+            </div>
+            <div id="excludeCalendar" class="exclude-calendar hidden">
+                <select id="excludeMonth" onchange="renderExcludeCalendar()" style="margin-bottom: 10px; padding: 5px;">
+                    <!-- 동적 생성 -->
+                </select>
+                <div id="miniCalendar" class="mini-calendar">
+                    <!-- 동적 생성 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 교재 정보 섹션 -->
+        <div class="section">
+            <h3><span class="orange-circle"></span> 교재 정보</h3>
+            <div id="subjectsContainer">
+                <!-- 동적 생성 -->
+            </div>
+            <button class="btn btn-secondary" onclick="addSubject()" style="margin-top: 10px;">
+                ➕ 교재 추가
+            </button>
+        </div>
+
+        <!-- 생성 버튼 -->
+        <button class="btn btn-primary btn-generate" onclick="generateSchedule()">
+            🎯 학습계획표 생성하기
+        </button>
+
+        <!-- 결과 영역 -->
+        <div id="resultSection" class="hidden">
+            <div class="calendar-container">
+                <div id="calendarContent">
+                    <!-- 동적 생성 -->
+                </div>
+            </div>
+
+            <!-- 통계 섹션 -->
+            <div class="stats-section">
+                <div class="stats-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 500 500">
+                        <circle cx="250" cy="250" r="240" fill="#FF69B4" />
+                        <circle cx="250" cy="250" r="215" fill="none" stroke="#FFFFFF" stroke-width="35" />
+                        <text x="250" y="176" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="82" fill="#FFFFFF" letter-spacing="2">STUDY</text>
+                        <text x="60" y="400" font-family="Arial Rounded MT Bold, Arial, sans-serif" font-weight="900" font-size="280" fill="#FFFFFF">4</text>
+                        <circle cx="350" cy="280" r="70" fill="none" stroke="#FFFFFF" stroke-width="40" />
+                        <circle cx="250" cy="420" r="30" fill="#FFFFFF" />
+                    </svg>
+                    <h3 style="color: #2e3f6e; margin: 0;">학습 통계</h3>
+                </div>
+                <div class="stats-grid" id="statsGrid">
+                    <!-- 동적 생성 -->
+                </div>
+                <table id="summaryTable" style="width: 100%; margin-top: 20px; border-collapse: collapse; border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                    <!-- 동적 생성 -->
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let subjects = [];
+        let schedule = [];
+        let excludedDates = new Set();
+        let subjectIdCounter = 1;
+        let isPrintMode = false;
+        
+        // 미리보기 데이터 저장
+        let previewScheduleData = {};
+
+        // 회독 비율 함수 - 핵심 시스템
+        function getRoundRatios(rounds) {
+            const ratioMap = {
+                1: [1.0],
+                2: [0.6, 0.4],
+                3: [0.5, 0.3, 0.2],
+                4: [0.4, 0.3, 0.2, 0.1],
+                5: [0.35, 0.25, 0.2, 0.12, 0.08]
+            };
+            return ratioMap[rounds] || [1.0];
+        }
+
+        // 회독별 기간 분배 함수 - 핵심 시스템
+        function calculateRoundPeriods(totalDays, rounds) {
+            const ratios = getRoundRatios(rounds);
+            const periods = [];
+            let dayOffset = 0;
+            
+            ratios.forEach((ratio, index) => {
+                const roundDays = Math.ceil(totalDays * ratio);
+                periods.push({
+                    round: index + 1,
+                    startDay: dayOffset + 1,
+                    endDay: dayOffset + roundDays,
+                    days: roundDays,
+                    ratio: ratio
+                });
+                dayOffset += roundDays;
+            });
+            
+            return periods;
+        }
+
+        // 알림 표시
+        function showAlert(message, type = 'success') {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.classList.remove('hidden');
+            
+            setTimeout(() => {
+                alert.classList.add('hidden');
+            }, 3000);
+        }
+
+        // 설정 패널 토글
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.classList.toggle('open');
+        }
+
+        // 교재 선택 시 테두리 표시
+        function selectSubject(subjectId) {
+            document.querySelectorAll('.subject-container').forEach(container => {
+                container.classList.remove('selected');
+            });
+            
+            const clickedContainer = document.querySelector(`[data-subject-id="${subjectId}"]`);
+            if (clickedContainer) {
+                clickedContainer.classList.add('selected');
+            }
+        }
+
+        // 교재 추가
+        function addSubject() {
+            const subject = {
+                id: subjectIdCounter++,
+                name: '',
+                ranges: [{ start: '', end: '' }],
+                unitType: 'page',
+                startDate: document.getElementById('globalStartDate')?.value || '',
+                endDate: document.getElementById('globalEndDate')?.value || '',
+                useIndividual: false,
+                pattern: {
+                    dayPattern: ['daily'],
+                    individualDays: [],
+                    rounds: 1,
+                    reviewMode: false,
+                    reviewDates: [],
+                    distributionType: 'equal',
+                    dailyAmount: 5
+                }
+            };
+            subjects.push(subject);
+            renderSubjects();
+        }
+
+        // 교재 목록 렌더링
+        function renderSubjects() {
+            const container = document.getElementById('subjectsContainer');
+            container.innerHTML = '';
+
+            subjects.forEach((subject, index) => {
+                const div = document.createElement('div');
+                div.className = 'subject-container';
+                div.setAttribute('data-subject-id', subject.id);
+                div.onclick = (e) => {
+                    if (!e.target.matches('button') && !e.target.matches('input') && !e.target.matches('select')) {
+                        selectSubject(subject.id);
+                    }
+                };
+                
+                let html = `
+                    <div class="subject-header">
+                        <h4>교재 ${index + 1}</h4>
+                        ${subjects.length > 1 ? `<button class="remove-subject-btn" onclick="removeSubject(${subject.id}); event.stopPropagation()">X</button>` : ''}
+                    </div>
+                    
+                    <div class="subject-info">
+                        <input type="text" 
+                               placeholder="교재명" 
+                               value="${subject.name}" 
+                               onchange="updateSubject(${subject.id}, 'name', this.value)"
+                               onclick="event.stopPropagation()">
+                `;
+                
+                // 첫 번째 범위
+                const firstRange = subject.ranges[0];
+                html += `
+                    <input type="number" 
+                           placeholder="시작" 
+                           value="${firstRange.start}" 
+                           onchange="updateRange(${subject.id}, 0, 'start', this.value)"
+                           onclick="event.stopPropagation()">
+                    <span>~</span>
+                    <input type="number" 
+                           placeholder="끝" 
+                           value="${firstRange.end}" 
+                           onchange="updateRange(${subject.id}, 0, 'end', this.value)"
+                           onclick="event.stopPropagation()">
+                    <select onchange="updateSubject(${subject.id}, 'unitType', this.value)" onclick="event.stopPropagation()">
+                        <option value="page" ${subject.unitType === 'page' ? 'selected' : ''}>페이지</option>
+                        <option value="lesson" ${subject.unitType === 'lesson' ? 'selected' : ''}>강</option>
+                        <option value="number" ${subject.unitType === 'number' ? 'selected' : ''}>번</option>
+                        <option value="day" ${subject.unitType === 'day' ? 'selected' : ''}>Day</option>
+                    </select>
+                </div>
+                `;
+                
+                // 추가 범위들
+                if (subject.ranges.length > 1) {
+                    html += '<div class="ranges-container">';
+                    for (let i = 1; i < subject.ranges.length; i++) {
+                        const range = subject.ranges[i];
+                        html += `
+                            <div class="range-item">
+                                <span style="color: #666;">범위 ${i + 1}:</span>
+                                <input type="number" 
+                                       placeholder="시작" 
+                                       value="${range.start}" 
+                                       onchange="updateRange(${subject.id}, ${i}, 'start', this.value)"
+                                       onclick="event.stopPropagation()">
+                                <span>~</span>
+                                <input type="number" 
+                                       placeholder="끝" 
+                                       value="${range.end}" 
+                                       onchange="updateRange(${subject.id}, ${i}, 'end', this.value)"
+                                       onclick="event.stopPropagation()">
+                                <button class="remove-range-btn" onclick="removeRange(${subject.id}, ${i}); event.stopPropagation()">X</button>
+                            </div>
+                        `;
+                    }
+                    html += '</div>';
+                }
+                
+                // 범위 추가 버튼
+                if (subject.ranges.length < 5) {
+                    html += `<button class="add-range-btn" onclick="addRange(${subject.id}); event.stopPropagation()">+ 범위 추가</button>`;
+                }
+                
+                // 개별 기간 설정
+                html += `
+                    <div style="margin-top: 10px;">
+                        <label onclick="event.stopPropagation()">
+                            <input type="checkbox" 
+                                   ${subject.useIndividual ? 'checked' : ''} 
+                                   onchange="toggleIndividual(${subject.id})"
+                                   onclick="event.stopPropagation()">
+                            개별 기간 설정
+                        </label>
+                        ${subject.useIndividual ? `
+                            <input type="date" 
+                                   value="${subject.startDate}" 
+                                   onchange="updateSubject(${subject.id}, 'startDate', this.value)"
+                                   onclick="event.stopPropagation()">
+                            ~
+                            <input type="date" 
+                                   value="${subject.endDate}" 
+                                   onchange="updateSubject(${subject.id}, 'endDate', this.value)"
+                                   onclick="event.stopPropagation()">
+                        ` : ''}
+                    </div>
+                `;
+                
+                // 패턴 컨트롤
+                html += createPatternControls(subject);
+                
+                // 미리보기
+                const preview = createPreview(subject);
+                if (preview) {
+                    html += preview;
+                }
+                
+                div.innerHTML = html;
+                container.appendChild(div);
+            });
+        }
+
+        // 패턴 컨트롤 생성
+        function createPatternControls(subject) {
+            const pattern = subject.pattern;
+            const reviewDisabled = pattern.rounds > 1;
+            const reviewClass = reviewDisabled ? 'disabled' : (pattern.reviewMode ? 'active' : '');
+            
+            return `
+                <div class="pattern-controls" onclick="event.stopPropagation()">
+                    <div class="pattern-row">
+                        <span>요일 패턴:</span>
+                        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                            ${['월수금', '화목토', '홀수날', '짝수날', '매일'].map((label, i) => {
+                                const ids = ['mon-wed-fri', 'tue-thu-sat', 'odd-days', 'even-days', 'daily'];
+                                return `<div class="pattern-btn ${pattern.dayPattern.includes(ids[i]) ? 'active' : ''}" 
+                                        onclick="togglePattern(${subject.id}, '${ids[i]}'); event.stopPropagation()">${label}</div>`;
+                            }).join('')}
+                            <span>|</span>
+                            ${['월', '화', '수', '목', '금', '토', '일'].map((label, i) => {
+                                const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+                                return `<div class="individual-day-btn ${pattern.individualDays.includes(days[i]) ? 'active' : ''}" 
+                                        onclick="toggleIndividualDay(${subject.id}, '${days[i]}'); event.stopPropagation()">${label}</div>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                    <div class="pattern-row">
+                        <span>분량 배분:</span>
+                        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                            ${[1, 2, 3, 4, 5].map(r => 
+                                `<div class="pattern-btn ${pattern.rounds === r ? 'active' : ''}" 
+                                      onclick="setRounds(${subject.id}, ${r}); event.stopPropagation()">${r}회독</div>`
+                            ).join('')}
+                            <button class="review-btn ${reviewClass}" 
+                                    onclick="toggleReviewMode(${subject.id}); event.stopPropagation()" 
+                                    ${reviewDisabled ? 'disabled' : ''}>●</button>
+                            <span>|</span>
+                            <div class="pattern-btn ${pattern.distributionType === 'equal' ? 'active' : ''}" 
+                                 onclick="setDistribution(${subject.id}, 'equal'); event.stopPropagation()">균등분산</div>
+                            <div class="pattern-btn ${pattern.distributionType === 'sequential' ? 'active' : ''}" 
+                                 onclick="setDistribution(${subject.id}, 'sequential'); event.stopPropagation()">순차배분</div>
+                        </div>
+                    </div>
+                    ${pattern.distributionType === 'sequential' ? `
+                        <div class="pattern-row">
+                            <span>일일 학습량:</span>
+                            <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                                ${[1, 2, 3, 5, 10, 15, 20, 25, 30].map(a => 
+                                    `<div class="daily-amount-btn ${pattern.dailyAmount === a ? 'active' : ''}" 
+                                          onclick="setDailyAmount(${subject.id}, ${a}); event.stopPropagation()">${a}p</div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // 미리보기 생성
+        function createPreview(subject) {
+            const totalPages = calculateTotalPages(subject);
+            if (totalPages === 0) return '';
+            
+            const studyDates = calculateStudyDates(subject);
+            if (studyDates.length === 0) {
+                return '<div class="preview-section"><div style="padding: 15px; color: #d63384;">학습 가능한 날짜가 없습니다.</div></div>';
+            }
+            
+            // 회독수 시스템으로 스케줄 계산
+            const scheduleData = calculateScheduleForSubject(subject, studyDates, totalPages);
+            previewScheduleData[subject.id] = scheduleData;
+            
+            const reviewModeText = subject.pattern.reviewMode ? ' (복습 모드: 회색 블록 클릭)' : '';
+            
+            return `
+                <div class="preview-section">
+                    <div class="preview-header">
+                        <span class="orange-circle"></span>
+                        <h3>${subject.name} 미리보기${reviewModeText}</h3>
+                    </div>
+                    <div class="preview-content">
+                        ${generateBlocksColumn(subject, studyDates, scheduleData)}
+                        ${generateCompactCalendarColumn(subject, scheduleData)}
+                        ${generateCalculationColumn(subject, studyDates, totalPages, scheduleData)}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 회독수 스케줄 계산 함수 - 핵심 시스템
+        function calculateScheduleForSubject(subject, studyDates, totalPages) {
+            const scheduleData = [];
+            const pattern = subject.pattern;
+            
+            // 범위별 시작 페이지 계산
+            const ranges = [];
+            subject.ranges.forEach(range => {
+                if (range.start && range.end) {
+                    ranges.push({
+                        start: parseInt(range.start),
+                        end: parseInt(range.end)
+                    });
+                }
+            });
+            
+            if (ranges.length === 0) return scheduleData;
+            
+            // 회독별 기간 분배
+            const periods = calculateRoundPeriods(studyDates.length, pattern.rounds);
+            
+            // 각 회독별로 스케줄 생성
+            periods.forEach(period => {
+                const roundDates = studyDates.slice(period.startDay - 1, period.endDay);
+                const roundSchedule = generateRoundSchedule(
+                    roundDates, 
+                    totalPages, 
+                    ranges, 
+                    period.round,
+                    pattern.distributionType,
+                    pattern.dailyAmount
+                );
+                scheduleData.push(...roundSchedule);
+            });
+            
+            // 복습일 처리 (1회독에서만)
+            if (pattern.reviewDates.length > 0 && pattern.rounds === 1) {
+                addReviewSchedule(scheduleData, pattern.reviewDates);
+            }
+            
+            // 날짜순 정렬
+            scheduleData.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            return scheduleData;
+        }
+
+        // 회독별 스케줄 생성
+        function generateRoundSchedule(roundDates, totalPages, ranges, round, distributionType, dailyAmount) {
+            const roundSchedule = [];
+            
+            if (distributionType === 'equal') {
+                // 균등 분산
+                const dailyAverage = totalPages / roundDates.length;
+                let actualDates = roundDates;
+                
+                if (dailyAverage < 1.0) {
+                    const neededDays = totalPages;
+                    actualDates = roundDates.slice(0, neededDays);
+                }
+                
+                if (actualDates.length === 0) return roundSchedule;
+                
+                // 페이지 분배
+                let currentRangeIndex = 0;
+                let currentRangeOffset = 0;
+                let totalPagesAssigned = 0;
+                
+                actualDates.forEach((date, dayIndex) => {
+                    if (totalPagesAssigned >= totalPages) return;
+                    if (currentRangeIndex >= ranges.length) return;
+                    
+                    // 하루 학습량 계산
+                    const remainingDays = actualDates.length - dayIndex;
+                    const remainingPages = totalPages - totalPagesAssigned;
+                    const todayPages = Math.ceil(remainingPages / remainingDays);
+                    
+                    if (todayPages <= 0) return;
+                    
+                    // 실제 페이지 번호 계산
+                    let pagesAssigned = 0;
+                    let startPage = null;
+                    let endPage = null;
+                    
+                    while (pagesAssigned < todayPages && currentRangeIndex < ranges.length) {
+                        const currentRange = ranges[currentRangeIndex];
+                        const rangeRemaining = currentRange.end - (currentRange.start + currentRangeOffset) + 1;
+                        const toAssign = Math.min(todayPages - pagesAssigned, rangeRemaining);
+                        
+                        if (startPage === null) {
+                            startPage = currentRange.start + currentRangeOffset;
+                        }
+                        endPage = currentRange.start + currentRangeOffset + toAssign - 1;
+                        
+                        // 범위 초과 방지
+                        if (endPage > currentRange.end) {
+                            endPage = currentRange.end;
+                            toAssign = endPage - startPage + 1;
+                        }
+                        
+                        pagesAssigned += toAssign;
+                        currentRangeOffset += toAssign;
+                        
+                        if (currentRangeOffset >= (currentRange.end - currentRange.start + 1)) {
+                            currentRangeIndex++;
+                            currentRangeOffset = 0;
+                        }
+                    }
+                    
+                    if (startPage !== null && endPage !== null && startPage <= endPage) {
+                        roundSchedule.push({
+                            date: formatDate(date),
+                            startPage: startPage,
+                            endPage: endPage,
+                            round: round,
+                            isReview: false
+                        });
+                        
+                        totalPagesAssigned += pagesAssigned;
+                    }
+                });
+            } else {
+                // 순차 배분
+                let currentRangeIndex = 0;
+                let currentRangeOffset = 0;
+                let totalPagesAssigned = 0;
+                
+                for (const date of roundDates) {
+                    if (totalPagesAssigned >= totalPages) break;
+                    if (currentRangeIndex >= ranges.length) break;
+                    
+                    const todayPages = Math.min(dailyAmount, totalPages - totalPagesAssigned);
+                    if (todayPages <= 0) break;
+                    
+                    let pagesAssigned = 0;
+                    let startPage = null;
+                    let endPage = null;
+                    
+                    while (pagesAssigned < todayPages && currentRangeIndex < ranges.length) {
+                        const currentRange = ranges[currentRangeIndex];
+                        const rangeRemaining = currentRange.end - (currentRange.start + currentRangeOffset) + 1;
+                        const toAssign = Math.min(todayPages - pagesAssigned, rangeRemaining);
+                        
+                        if (startPage === null) {
+                            startPage = currentRange.start + currentRangeOffset;
+                        }
+                        endPage = currentRange.start + currentRangeOffset + toAssign - 1;
+                        
+                        // 범위 초과 방지
+                        if (endPage > currentRange.end) {
+                            endPage = currentRange.end;
+                            toAssign = endPage - startPage + 1;
+                        }
+                        
+                        pagesAssigned += toAssign;
+                        currentRangeOffset += toAssign;
+                        
+                        if (currentRangeOffset >= (currentRange.end - currentRange.start + 1)) {
+                            currentRangeIndex++;
+                            currentRangeOffset = 0;
+                        }
+                    }
+                    
+                    if (startPage !== null && endPage !== null && startPage <= endPage) {
+                        roundSchedule.push({
+                            date: formatDate(date),
+                            startPage: startPage,
+                            endPage: endPage,
+                            round: round,
+                            isReview: false
+                        });
+                        
+                        totalPagesAssigned += pagesAssigned;
+                    }
+                }
+            }
+            
+            return roundSchedule;
+        }
+
+        // 복습 일정 추가
+        function addReviewSchedule(scheduleData, reviewDates) {
+            // 주별 학습 데이터 그룹화
+            const weeklyData = {};
+            
+            scheduleData.forEach(item => {
+                if (!item.isReview) {
+                    const date = new Date(item.date);
+                    const weekStart = getWeekStart(date);
+                    const weekKey = formatDate(weekStart);
+                    
+                    if (!weeklyData[weekKey]) {
+                        weeklyData[weekKey] = {
+                            minPage: Infinity,
+                            maxPage: -Infinity,
+                            reviewDates: []
+                        };
+                    }
+                    
+                    weeklyData[weekKey].minPage = Math.min(weeklyData[weekKey].minPage, item.startPage);
+                    weeklyData[weekKey].maxPage = Math.max(weeklyData[weekKey].maxPage, item.endPage);
+                }
+            });
+            
+            // 복습일 할당
+            reviewDates.forEach(reviewDate => {
+                const date = new Date(reviewDate);
+                const weekStart = getWeekStart(date);
+                const weekKey = formatDate(weekStart);
+                
+                if (weeklyData[weekKey]) {
+                    weeklyData[weekKey].reviewDates.push(reviewDate);
+                }
+            });
+            
+            // 복습량 분배
+            Object.keys(weeklyData).forEach(weekKey => {
+                const weekInfo = weeklyData[weekKey];
+                if (weekInfo.reviewDates.length > 0 && weekInfo.minPage !== Infinity) {
+                    const totalWeekPages = weekInfo.maxPage - weekInfo.minPage + 1;
+                    const pagesPerReview = Math.ceil(totalWeekPages / weekInfo.reviewDates.length);
+                    
+                    weekInfo.reviewDates.sort().forEach((reviewDate, index) => {
+                        const reviewStart = weekInfo.minPage + (index * pagesPerReview);
+                        const reviewEnd = Math.min(reviewStart + pagesPerReview - 1, weekInfo.maxPage);
+                        
+                        if (reviewStart <= reviewEnd) {
+                            scheduleData.push({
+                                date: reviewDate,
+                                startPage: reviewStart,
+                                endPage: reviewEnd,
+                                round: 1,
+                                isReview: true
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // ★ 핵심 수정: 블록 시각화 생성 - scheduleData 기준으로 완전 재작성
+        function generateBlocksColumn(subject, studyDates, scheduleData) {
+            
+            const start = new Date(subject.startDate);
+            const end = new Date(subject.endDate);
+            const blocks = [];
+            
+            // 1. 데이터 맵 생성 (Single Source of Truth)
+            const scheduleMap = new Map();
+            scheduleData.forEach(item => {
+                scheduleMap.set(item.date, item);
+            });
+            
+            // 2. 복습일 세트 생성
+            const reviewDates = new Set(subject.pattern.reviewDates);
+            
+            // 3. 전체 기간 순회하되 데이터 맵 기준으로만 판단
+            let current = new Date(start);
+            while (current <= end) {
+                const dateStr = formatDate(current);
+                const scheduleItem = scheduleMap.get(dateStr);
+                
+                if (scheduleItem && !scheduleItem.isReview) {
+                    // 학습일: scheduleData의 round 정보 사용
+                    blocks.push(`<div class="day-block round-${scheduleItem.round}"></div>`);
+                } else if (scheduleItem && scheduleItem.isReview) {
+                    // 복습일: scheduleData의 복습 정보 사용  
+                    blocks.push(`<div class="day-block review-day"></div>`);
+                } else if (reviewDates.has(dateStr)) {
+                    // 복습 설정일 (데이터 없어도)
+                    blocks.push(`<div class="day-block review-day" onclick="toggleReviewDate(${subject.id}, '${dateStr}'); event.stopPropagation()"></div>`);
+                } else {
+                    // 휴식일
+                    const clickHandler = subject.pattern.reviewMode ? 
+                        `onclick="toggleReviewDate(${subject.id}, '${dateStr}'); event.stopPropagation()"` : '';
+                    blocks.push(`<div class="day-block non-study-day" ${clickHandler}></div>`);
+                }
+                
+                current.setDate(current.getDate() + 1);
+            }
+            
+            // 주차별 그룹핑
+            const weekGroups = [];
+            for (let i = 0; i < blocks.length; i += 7) {
+                weekGroups.push(`<div class="week-group">${blocks.slice(i, i + 7).join('')}</div>`);
+            }
+            
+            // 회독별 통계 계산
+            const roundStats = {};
+            scheduleData.filter(d => !d.isReview).forEach(d => {
+                roundStats[d.round] = (roundStats[d.round] || 0) + 1;
+            });
+            
+            const reviewDays = subject.pattern.reviewDates.length;
+            const totalStudyDays = Object.values(roundStats).reduce((sum, days) => sum + days, 0);
+            const restDays = blocks.length - totalStudyDays - reviewDays;
+            
+            let statsText = '';
+            Object.keys(roundStats).sort().forEach(round => {
+                statsText += `${round}회독 ${roundStats[round]}일 | `;
+            });
+            if (reviewDays > 0) statsText += `복습 ${reviewDays}일 | `;
+            statsText += `휴식 ${restDays}일`;
+            
+            
+            return `
+                <div class="preview-blocks-container">
+                    <div class="preview-blocks">${weekGroups.join('')}</div>
+                    <div class="block-stats">${statsText}</div>
+                </div>
+            `;
+        }
+
+        // 축약 달력 컬럼 생성 
+        function generateCompactCalendarColumn(subject, scheduleData) {
+            if (!scheduleData || scheduleData.length === 0) {
+                return '<div class="preview-calendar-container">데이터 없음</div>';
+            }
+            
+            // 사용되는 요일 추출
+            const usedDays = new Set();
+            const pattern = subject.pattern;
+            
+            if (pattern.individualDays.length > 0) {
+                pattern.individualDays.forEach(day => {
+                    const dayIndex = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].indexOf(day);
+                    if (dayIndex !== -1) usedDays.add(dayIndex + 1);
+                });
+            } else {
+                pattern.dayPattern.forEach(pat => {
+                    switch(pat) {
+                        case 'daily':
+                            [1,2,3,4,5,6,0].forEach(d => usedDays.add(d));
+                            break;
+                        case 'mon-wed-fri':
+                            [1,3,5].forEach(d => usedDays.add(d));
+                            break;
+                        case 'tue-thu-sat':
+                            [2,4,6].forEach(d => usedDays.add(d));
+                            break;
+                    }
+                });
+            }
+            
+            // 복습일도 포함
+            subject.pattern.reviewDates.forEach(dateStr => {
+                const date = new Date(dateStr);
+                usedDays.add(date.getDay());
+            });
+            
+            const sortedDays = Array.from(usedDays).sort((a, b) => {
+                const aIndex = a === 0 ? 6 : a - 1;
+                const bIndex = b === 0 ? 6 : b - 1;
+                return aIndex - bIndex;
+            });
+            
+            // 요일명 매핑
+            const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+            
+            let html = '<div class="preview-calendar-container"><table class="compact-calendar"><thead><tr>';
+            sortedDays.forEach(dayIndex => {
+                html += `<th>${dayNames[dayIndex]}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            // 날짜별 데이터 그룹화
+            const dateData = {};
+            scheduleData.forEach(item => {
+                dateData[item.date] = item;
+            });
+            
+            // 주차별 데이터 생성
+            const weeks = [];
+            const dates = Object.keys(dateData).sort();
+            if (dates.length > 0) {
+                const firstDate = new Date(dates[0]);
+                const lastDate = new Date(dates[dates.length - 1]);
+                
+                let current = new Date(firstDate);
+                current.setDate(current.getDate() - current.getDay() + 1);
+                
+                while (current <= lastDate) {
+                    const week = {};
+                    for (let i = 0; i < 7; i++) {
+                        const dateStr = formatDate(current);
+                        const data = dateData[dateStr];
+                        if (data && sortedDays.includes(current.getDay())) {
+                            week[current.getDay()] = {
+                                date: current.getDate(),
+                                data: data
+                            };
+                        }
+                        current.setDate(current.getDate() + 1);
+                    }
+                    
+                    if (Object.keys(week).length > 0) {
+                        weeks.push(week);
+                    }
+                }
+            }
+            
+            // 테이블 행 생성
+            weeks.forEach(week => {
+                html += '<tr>';
+                sortedDays.forEach(dayIndex => {
+                    const dayData = week[dayIndex];
+                    if (dayData) {
+                        const cellClass = dayData.data.isReview ? 'review-cell' : '';
+                        const reviewText = dayData.data.isReview ? '<br>(복습)' : '';
+                        const roundText = dayData.data.round > 1 ? ` (${dayData.data.round}회독)` : '';
+                        html += `<td class="${cellClass}">
+                                    <div class="date-num">${dayData.date}</div>
+                                    <div class="task-text">${dayData.data.startPage}-${dayData.data.endPage}p${roundText}${reviewText}</div>
+                                 </td>`;
+                    } else {
+                        html += '<td></td>';
+                    }
+                });
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            return html;
+        }
+
+        // 계산 상세 생성 (7개 필수 항목 + 회독 정보)
+        function generateCalculationColumn(subject, studyDates, totalPages, scheduleData) {
+            const pattern = subject.pattern;
+            const unitLabel = getUnitLabel(subject.unitType);
+            const start = new Date(subject.startDate);
+            const end = new Date(subject.endDate);
+            const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+            
+            let calculation = '';
+            
+            // 1. 분배방식
+            calculation += `• 분배방식: ${pattern.distributionType === 'equal' ? '균등분산' : '순차배분'} (${pattern.rounds}회독)\n`;
+            
+            // 2. 총학습기간 중 실제학습일
+            calculation += `• 총학습기간 중 실제학습일: 총 ${totalDays}일 기간 중 실제 학습일 ${studyDates.length}일\n`;
+            
+            // 3. 학습범위
+            const rangeText = subject.ranges.map(r => `${r.start}-${r.end}`).join(' + ');
+            const totalContent = totalPages * pattern.rounds;
+            calculation += `• 학습범위: 총 ${totalPages}${unitLabel} × ${pattern.rounds}회독 = ${totalContent}${unitLabel} (${rangeText})\n`;
+            
+            // 4. 회독별 기간
+            if (pattern.rounds > 1) {
+                const periods = calculateRoundPeriods(studyDates.length, pattern.rounds);
+                const periodText = periods.map(p => `${p.round}회독 ${p.days}일`).join(', ');
+                calculation += `• 회독별 기간: ${periodText}\n`;
+            } else {
+                calculation += `• 회독별 기간: 1회독 ${studyDates.length}일\n`;
+            }
+            
+            // 5. 회독별 일평균
+            if (pattern.rounds > 1) {
+                const periods = calculateRoundPeriods(studyDates.length, pattern.rounds);
+                const avgText = periods.map(p => `${p.round}회독 ${(totalPages / p.days).toFixed(1)}${unitLabel}/일`).join(', ');
+                calculation += `• 회독별 일평균: ${avgText}\n`;
+            } else {
+                const dailyAvg = totalPages / studyDates.length;
+                calculation += `• 회독별 일평균: 1회독 ${dailyAvg.toFixed(1)}${unitLabel}/일\n`;
+            }
+            
+            // 6. 분배방식
+            if (pattern.distributionType === 'equal') {
+                calculation += `• 분배방식: 각 회독마다 전체 내용 반복, 주단위 계산 후 주내 분배\n`;
+            } else {
+                calculation += `• 분배방식: 각 회독마다 일일 ${pattern.dailyAmount}${unitLabel} 고정\n`;
+            }
+            
+            // 7. 복습일
+            if (pattern.reviewDates.length > 0 && pattern.rounds === 1) {
+                const reviewItems = scheduleData.filter(d => d.isReview);
+                if (reviewItems.length > 0) {
+                    const reviewRanges = reviewItems.map(r => `${r.startPage}-${r.endPage}p`).join(', ');
+                    calculation += `• 복습일: ${reviewRanges}\n`;
+                } else {
+                    calculation += `• 복습일: 설정됨 (${pattern.reviewDates.length}일)\n`;
+                }
+            } else if (pattern.rounds > 1) {
+                calculation += `• 복습일: 2회독 이상에서는 불가능\n`;
+            } else {
+                calculation += `• 복습일: 없음\n`;
+            }
+            
+            return `<div class="preview-calculation">${calculation}</div>`;
+        }
+
+        // 학습 날짜 계산
+        function calculateStudyDates(subject) {
+            const start = new Date(subject.startDate);
+            const end = new Date(subject.endDate);
+            const dates = [];
+            let current = new Date(start);
+            const pattern = subject.pattern;
+
+            while (current <= end) {
+                const dateStr = formatDate(current);
+                
+                if (!excludedDates.has(dateStr) && !pattern.reviewDates.includes(dateStr)) {
+                    const dayOfWeek = current.getDay();
+                    const dayOfMonth = current.getDate();
+                    let shouldStudy = false;
+
+                    if (pattern.individualDays.length > 0) {
+                        const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+                        const currentDayName = dayNames[dayOfWeek];
+                        shouldStudy = pattern.individualDays.includes(currentDayName);
+                    } else {
+                        for (const pat of pattern.dayPattern) {
+                            switch(pat) {
+                                case 'daily':
+                                    shouldStudy = true;
+                                    break;
+                                case 'mon-wed-fri':
+                                    shouldStudy = [1, 3, 5].includes(dayOfWeek);
+                                    break;
+                                case 'tue-thu-sat':
+                                    shouldStudy = [2, 4, 6].includes(dayOfWeek);
+                                    break;
+                                case 'odd-days':
+                                    shouldStudy = (dayOfMonth % 2 === 1);
+                                    break;
+                                case 'even-days':
+                                    shouldStudy = (dayOfMonth % 2 === 0);
+                                    break;
+                            }
+                            if (shouldStudy) break;
+                        }
+                    }
+
+                    if (shouldStudy) {
+                        dates.push(new Date(current));
+                    }
+                }
+                
+                current.setDate(current.getDate() + 1);
+            }
+
+            return dates;
+        }
+
+        // 총 페이지 계산
+        function calculateTotalPages(subject) {
+            let total = 0;
+            subject.ranges.forEach(range => {
+                if (range.start && range.end) {
+                    total += parseInt(range.end) - parseInt(range.start) + 1;
+                }
+            });
+            return total;
+        }
+
+        // 주 시작일 계산 (월요일)
+        function getWeekStart(date) {
+            const weekStart = new Date(date);
+            const day = weekStart.getDay();
+            const diff = day === 0 ? -6 : 1 - day;
+            weekStart.setDate(weekStart.getDate() + diff);
+            return weekStart;
+        }
+
+        // 복습일 토글 함수 - 핵심 누락 함수
+        function toggleReviewDate(subjectId, dateStr) {
+            const subject = subjects.find(s => s.id === subjectId);
+            if (!subject || !subject.pattern.reviewMode) return;
+            
+            const index = subject.pattern.reviewDates.indexOf(dateStr);
+            if (index > -1) {
+                subject.pattern.reviewDates.splice(index, 1);
+            } else {
+                subject.pattern.reviewDates.push(dateStr);
+            }
+            
+            renderSubjects();
+        }
+
+        // 패턴 토글 함수들
+        function togglePattern(subjectId, patternId) {
+            const subject = subjects.find(s => s.id === subjectId);
+            if (subject) {
+                subject.pattern.dayPattern = [patternId];
+                subject.pattern.individualDays = [];
+                renderSubjects();
+            }
+        }
+
+        function toggleIndividualDay(subjectId, dayId) {
+            const subject = subjects.find(s => s.id === subjectId);
+            if (subject) {
+                const index = subject.pattern.individualDays.indexOf(dayId);
+                
+                if (index > -1) {
+                    subject.pattern.individualDays.splice(index, 1);
+                } else {
+                    subject.pattern.dayPattern = [];
+                    subject.pattern.individualDays.push(dayId);
+                }
+                
+                if (subject.pattern.individualDays.length === 0 && subject.pattern.dayPattern.length === 0) {
+                    subject.pattern.dayPattern = ['daily'];
+                }
+                
+                renderSubjects();
+            }
+        }
+
+        function setRounds(subjectId, rounds) {
+            const subject = subjects.find(s => s.id === subjectId);
+            if (subject) {
+                subject.pattern.rounds = rounds;
+                
+                // 2회독 이상 시 복습 모드 비활성화
+                if (rounds > 1) {
+                    subject.pattern.reviewMode = false;
+                    subject.pattern.reviewDates = [];
+                }
+                
+                renderSubjects();
+            }
+        }
+
+        function toggleReviewMode(subjectId) {
+            const subject = subjects.find(s => s.id === subjectId);
+            if (subject && subject.pattern.rounds === 1) {
+                subject.pattern.reviewMode = !subject.pattern.reviewMode;
+                if (!subject.pattern.reviewMode) {
+                    subject.pattern.reviewDates = [];
+                }
+                renderSubjects();
+            }
+        }
+
+        function setDistribution(subjectId, type) {
+            const subject = subjects.find(s => s.id === subjectId);
+            if (subject) {
+                subject.pattern.distributionType = type;
+                renderSubjects();
+            }
+        }
+
+        function setDailyAmount(subjectId, amount) {
+            const subject = subjects.find(s => s.id === subjectId);
+            if (subject) {
+                subject.pattern.dailyAmount = amount;
+                renderSubjects();
+            }
+        }
+
+        // 범위 관련 함수들
+        function addRange(subjectId) {
+            const subject = subjects.find(s => s.id === subjectId);
+            if (subject && subject.ranges.length < 5) {
+                subject.ranges.push({ start: '', end: '' });
+                renderSubjects();
+            }
+        }
+
+        function removeRange(subjectId, rangeIndex) {
+            const subject = subjects.find(s => s.id === subjectId);
+            if (subject && subject.ranges.length > 1) {
+                subject.ranges.splice(rangeIndex, 1);
+                renderSubjects();
+            }
+        }
+
+        function updateRange(subjectId, rangeIndex, field, value) {
+            const subject = subjects.find(s => s.id === subjectId);
+            if (subject && subject.ranges[rangeIndex]) {
+                subject.ranges[rangeIndex][field] = value ? parseInt(value) : '';
+                renderSubjects();
+            }
+        }
+
+        // 교재 업데이트/삭제
+        function updateSubject(id, field, value) {
+            const subject = subjects.find(s => s.id === id);
+            if (subject) {
+                subject[field] = value;
+                renderSubjects();
+            }
+        }
+
+        function removeSubject(id) {
+            if (subjects.length > 1) {
+                subjects = subjects.filter(s => s.id !== id);
+                renderSubjects();
+            }
+        }
+
+        function toggleIndividual(id) {
+            const subject = subjects.find(s => s.id === id);
+            if (subject) {
+                subject.useIndividual = !subject.useIndividual;
+                if (!subject.useIndividual) {
+                    subject.startDate = document.getElementById('globalStartDate').value;
+                    subject.endDate = document.getElementById('globalEndDate').value;
+                }
+                renderSubjects();
+            }
+        }
+
+        // 간편 입력 파싱
+        function parseQuickInput() {
+            const input = document.getElementById('quickInput').value;
+            if (!input.trim()) {
+                showAlert('입력된 내용이 없습니다.', 'error');
+                return;
+            }
+
+            const lines = input.split('\n').filter(line => line.trim());
+            subjects = [];
+            
+            let hasValidData = false;
+            lines.forEach((line) => {
+                let parts;
+                if (line.includes(',')) {
+                    parts = line.split(',').map(p => p.trim());
+                } else {
+                    parts = line.split(/\t+|\s{2,}/).map(p => p.trim()).filter(p => p);
+                }
+
+                if (parts.length >= 4) {
+                    const range = parts[1].split(/[-~]/);
+                    if (range.length !== 2) return;
+
+                    let startDate = parts[2];
+                    let endDate = parts[3];
+
+                    const datePattern = /(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/;
+                    if (datePattern.test(startDate)) {
+                        startDate = startDate.replace(datePattern, (m, y, mon, d) => {
+                            return `${y}-${mon.padStart(2, '0')}-${d.padStart(2, '0')}`;
+                        });
+                    }
+                    if (datePattern.test(endDate)) {
+                        endDate = endDate.replace(datePattern, (m, y, mon, d) => {
+                            return `${y}-${mon.padStart(2, '0')}-${d.padStart(2, '0')}`;
+                        });
+                    }
+
+                    const subjectId = subjectIdCounter++;
+                    subjects.push({
+                        id: subjectId,
+                        name: parts[0],
+                        ranges: [{ start: parseInt(range[0]), end: parseInt(range[1]) }],
+                        unitType: 'page',
+                        startDate: startDate,
+                        endDate: endDate,
+                        useIndividual: true,
+                        pattern: {
+                            dayPattern: ['daily'],
+                            individualDays: [],
+                            rounds: 1,
+                            reviewMode: false,
+                            reviewDates: [],
+                            distributionType: 'equal',
+                            dailyAmount: 5
+                        }
+                    });
+                    
+                    hasValidData = true;
+                }
+            });
+
+            if (hasValidData) {
+                if (subjects.length > 0) {
+                    document.getElementById('globalStartDate').value = subjects[0].startDate;
+                    document.getElementById('globalEndDate').value = subjects[0].endDate;
+                }
+                
+                renderSubjects();
+                showAlert(`파싱 완료! ${subjects.length}개 교재가 추가되었습니다.`, 'success');
+            } else {
+                showAlert('올바른 형식으로 입력해주세요.', 'error');
+            }
+        }
+
+        // 글로벌 날짜 업데이트
+        function updateGlobalDates() {
+            const startDate = document.getElementById('globalStartDate').value;
+            const endDate = document.getElementById('globalEndDate').value;
+            
+            subjects.forEach(subject => {
+                if (!subject.useIndividual) {
+                    subject.startDate = startDate;
+                    subject.endDate = endDate;
+                }
+            });
+            
+            renderSubjects();
+            renderExcludeCalendarOptions();
+        }
+
+        // 휴일 제외 관련
+        function toggleExcludeCalendar() {
+            const calendar = document.getElementById('excludeCalendar');
+            calendar.classList.toggle('hidden');
+            if (!calendar.classList.contains('hidden')) {
+                renderExcludeCalendarOptions();
+            }
+        }
+
+        function renderExcludeCalendarOptions() {
+            const startDate = document.getElementById('globalStartDate').value;
+            const endDate = document.getElementById('globalEndDate').value;
+            
+            if (!startDate || !endDate) return;
+            
+            const select = document.getElementById('excludeMonth');
+            select.innerHTML = '';
+            
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const current = new Date(start.getFullYear(), start.getMonth(), 1);
+            
+            while (current <= end) {
+                const option = document.createElement('option');
+                option.value = `${current.getFullYear()}-${current.getMonth() + 1}`;
+                option.textContent = `${current.getFullYear()}년 ${current.getMonth() + 1}월`;
+                select.appendChild(option);
+                current.setMonth(current.getMonth() + 1);
+            }
+            
+            renderExcludeCalendar();
+        }
+
+        function renderExcludeCalendar() {
+            const monthValue = document.getElementById('excludeMonth').value;
+            if (!monthValue) return;
+            
+            const [year, month] = monthValue.split('-').map(Number);
+            const firstDay = new Date(year, month - 1, 1);
+            const lastDay = new Date(year, month, 0);
+            const startDay = firstDay.getDay();
+            
+            const calendar = document.getElementById('miniCalendar');
+            calendar.innerHTML = '';
+            
+            ['일', '월', '화', '수', '목', '금', '토'].forEach(day => {
+                const div = document.createElement('div');
+                div.textContent = day;
+                div.style.fontWeight = 'bold';
+                div.style.textAlign = 'center';
+                calendar.appendChild(div);
+            });
+            
+            for (let i = 0; i < startDay; i++) {
+                calendar.appendChild(document.createElement('div'));
+            }
+            
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const date = new Date(year, month - 1, day);
+                const dateStr = formatDate(date);
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                
+                const div = document.createElement('div');
+                div.className = 'calendar-day';
+                if (isWeekend) div.className += ' weekend';
+                if (excludedDates.has(dateStr)) div.className += ' excluded';
+                
+                div.textContent = day;
+                div.onclick = () => toggleExcludeDate(dateStr);
+                
+                calendar.appendChild(div);
+            }
+            
+            updateExcludedCount();
+        }
+
+        function toggleExcludeDate(dateStr) {
+            if (excludedDates.has(dateStr)) {
+                excludedDates.delete(dateStr);
+            } else {
+                excludedDates.add(dateStr);
+            }
+            renderExcludeCalendar();
+            renderSubjects();
+        }
+
+        function toggleWeekends() {
+            const startDate = document.getElementById('globalStartDate').value;
+            const endDate = document.getElementById('globalEndDate').value;
+            
+            if (!startDate || !endDate) return;
+            
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const current = new Date(start);
+            
+            const hasWeekends = Array.from(excludedDates).some(dateStr => {
+                const date = new Date(dateStr);
+                return date.getDay() === 0 || date.getDay() === 6;
+            });
+            
+            while (current <= end) {
+                if (current.getDay() === 0 || current.getDay() === 6) {
+                    const dateStr = formatDate(current);
+                    if (hasWeekends) {
+                        excludedDates.delete(dateStr);
+                    } else {
+                        excludedDates.add(dateStr);
+                    }
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            
+            renderExcludeCalendar();
+            renderSubjects();
+        }
+
+        function clearExcludedDates() {
+            excludedDates.clear();
+            renderExcludeCalendar();
+            renderSubjects();
+        }
+
+        function updateExcludedCount() {
+            document.getElementById('excludedCount').textContent = `제외된 날짜: ${excludedDates.size}일`;
+        }
+
+        // 최종 스케줄 생성
+        function generateSchedule() {
+            const validSubjects = subjects.filter(s => {
+                const hasValidRange = s.ranges.some(r => r.start && r.end);
+                return s.name && hasValidRange && s.startDate && s.endDate;
+            });
+
+            if (validSubjects.length === 0) {
+                showAlert('최소 하나 이상의 완전한 교재 정보를 입력해주세요.', 'error');
+                return;
+            }
+
+            schedule = [];
+
+            validSubjects.forEach((subject, subjectIndex) => {
+                const scheduleData = previewScheduleData[subject.id];
+                
+                if (!scheduleData || scheduleData.length === 0) {
+                    showAlert(`${subject.name}: 학습 가능한 날짜가 없습니다.`, 'error');
+                    return;
+                }
+                
+                scheduleData.forEach(item => {
+                    schedule.push({
+                        date: item.date,
+                        subject: subject.name,
+                        startPage: item.startPage,
+                        endPage: item.endPage,
+                        color: `color${subjectIndex % 6}`,
+                        unitType: subject.unitType,
+                        round: item.round,
+                        isReview: item.isReview
+                    });
+                });
+            });
+
+            if (schedule.length > 0) {
+                displayCalendar();
+                displayStats();
+                document.getElementById('resultSection').classList.remove('hidden');
+                showAlert(`학습계획표 생성 완료! 총 ${schedule.length}일 계획`, 'success');
+            }
+        }
+
+        // 달력 표시 - 축약형
+        function displayCalendar() {
+            const container = document.getElementById('calendarContent');
+            container.innerHTML = '';
+
+            const dailySchedule = {};
+            schedule.forEach(item => {
+                if (!dailySchedule[item.date]) {
+                    dailySchedule[item.date] = [];
+                }
+                dailySchedule[item.date].push(item);
+            });
+
+            const dates = Object.keys(dailySchedule).sort();
+            if (dates.length === 0) return;
+
+            const startDate = new Date(dates[0]);
+            const endDate = new Date(dates[dates.length - 1]);
+            let currentMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+
+            while (currentMonth <= endDate) {
+                const monthDiv = document.createElement('div');
+                monthDiv.className = 'calendar-month';
+                monthDiv.innerHTML = `
+                    <h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 500 500">
+                            <circle cx="250" cy="250" r="240" fill="#FF69B4" />
+                            <circle cx="250" cy="250" r="215" fill="none" stroke="#FFFFFF" stroke-width="35" />
+                            <text x="250" y="176" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="82" fill="#FFFFFF" letter-spacing="2">STUDY</text>
+                            <text x="60" y="400" font-family="Arial Rounded MT Bold, Arial, sans-serif" font-weight="900" font-size="280" fill="#FFFFFF">4</text>
+                            <circle cx="350" cy="280" r="70" fill="none" stroke="#FFFFFF" stroke-width="40" />
+                            <circle cx="250" cy="420" r="30" fill="#FFFFFF" />
+                        </svg>
+                        ${currentMonth.getFullYear()}년 ${currentMonth.getMonth() + 1}월
+                    </h3>
+                    ${generateCompactMonthCalendar(currentMonth, dailySchedule)}
+                `;
+                container.appendChild(monthDiv);
+                currentMonth.setMonth(currentMonth.getMonth() + 1);
+            }
+        }
+
+        // 축약형 월 달력 생성
+        function generateCompactMonthCalendar(monthDate, dailySchedule) {
+            const calendarStyle = document.getElementById('calendarStyle').value;
+            const year = monthDate.getFullYear();
+            const month = monthDate.getMonth();
+            
+            // 해당 월의 사용되는 날짜만 추출
+            const monthSchedule = {};
+            const usedDaysOfWeek = new Set();
+            
+            Object.keys(dailySchedule).forEach(dateStr => {
+                const date = new Date(dateStr);
+                if (date.getFullYear() === year && date.getMonth() === month) {
+                    monthSchedule[dateStr] = dailySchedule[dateStr];
+                    usedDaysOfWeek.add(date.getDay());
+                }
+            });
+            
+            if (Object.keys(monthSchedule).length === 0) {
+                return '<p style="text-align: center; color: #999;">이 달에는 학습 계획이 없습니다.</p>';
+            }
+            
+            // 사용되는 요일을 월요일 시작으로 정렬
+            const sortedDays = Array.from(usedDaysOfWeek).sort((a, b) => {
+                const aIndex = a === 0 ? 6 : a - 1;
+                const bIndex = b === 0 ? 6 : b - 1;
+                return aIndex - bIndex;
+            });
+            
+            const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+            
+            // 주별로 데이터 그룹화
+            const weeks = {};
+            Object.keys(monthSchedule).forEach(dateStr => {
+                const date = new Date(dateStr);
+                const weekStart = getWeekStart(date);
+                const weekKey = formatDate(weekStart);
+                
+                if (!weeks[weekKey]) {
+                    weeks[weekKey] = {};
+                }
+                
+                weeks[weekKey][date.getDay()] = {
+                    date: date.getDate(),
+                    schedule: monthSchedule[dateStr]
+                };
+            });
+            
+            let tableClass = 'compact-final-calendar';
+            if (calendarStyle === 'advanced2') tableClass += ' calendar-style-advanced2';
+            
+            let html = `<table class="${tableClass}"><thead><tr>`;
+            
+            // 헤더 - 사용되는 요일만 표시
+            sortedDays.forEach(dayIndex => {
+                html += `<th>${dayNames[dayIndex]}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            // 주별로 행 생성
+            Object.keys(weeks).sort().forEach(weekKey => {
+                const week = weeks[weekKey];
+                html += '<tr>';
+                
+                sortedDays.forEach(dayIndex => {
+                    const dayData = week[dayIndex];
+                    
+                    if (dayData) {
+                        let cellClass = '';
+                        if (calendarStyle === 'advanced2') {
+                            if (dayIndex === 0) cellClass += ' weekend-sun';
+                            else if (dayIndex === 6) cellClass += ' weekend-sat';
+                        }
+                        
+                        const hasReview = dayData.schedule.some(item => item.isReview);
+                        if (hasReview) cellClass += ' review-cell';
+                        
+                        html += `<td class="${cellClass}" ${hasReview ? 'style="background-color: #ffe4b5 !important;"' : ''}>`;
+                        html += `<div class="date-num">${dayData.date}</div>`;
+                        
+                        dayData.schedule.forEach(item => {
+                            const abbr = getSubjectAbbr(item.subject);
+                            const unitAbbr = getUnitAbbr(item.unitType);
+                            const roundSuffix = item.round > 1 ? ` (${item.round}회독)` : '';
+                            const printClass = isPrintMode ? ' print-mode' : '';
+                            const reviewClass = item.isReview ? ' review-task' : '';
+                            const reviewSuffix = item.isReview ? ' (복습)' : '';
+                            
+                            html += `<div class="task ${item.color}${printClass}${reviewClass}">${abbr}: ${item.startPage}-${item.endPage}${unitAbbr}${roundSuffix}${reviewSuffix}</div>`;
+                        });
+                        
+                        html += '</td>';
+                    } else {
+                        html += '<td></td>';
+                    }
+                });
+                
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            return html;
+        }
+
+        // 통계 표시
+        function displayStats() {
+            const statsGrid = document.getElementById('statsGrid');
+            const summaryTable = document.getElementById('summaryTable');
+            
+            const subjectStats = {};
+            schedule.forEach(item => {
+                if (!subjectStats[item.subject]) {
+                    subjectStats[item.subject] = {
+                        days: 0,
+                        totalPages: 0,
+                        unitType: item.unitType,
+                        rounds: new Set(),
+                        reviewDays: 0
+                    };
+                }
+                subjectStats[item.subject].days++;
+                if (item.isReview) {
+                    subjectStats[item.subject].reviewDays++;
+                } else {
+                    subjectStats[item.subject].rounds.add(item.round);
+                    subjectStats[item.subject].totalPages = Math.max(subjectStats[item.subject].totalPages, item.endPage);
+                }
+            });
+            
+            const totalSubjects = Object.keys(subjectStats).length;
+            const dates = schedule.map(item => item.date).sort();
+            const firstDate = new Date(dates[0]);
+            const lastDate = new Date(dates[dates.length - 1]);
+            const totalDays = Math.ceil((lastDate - firstDate) / (1000 * 60 * 60 * 24)) + 1;
+            const actualStudyDays = new Set(dates).size;
+            
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">총 교재 수</div>
+                    <div class="stat-value">${totalSubjects}개</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">총 기간</div>
+                    <div class="stat-value">${totalDays}일</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">총 학습일</div>
+                    <div class="stat-value">${actualStudyDays}일</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">일일 평균</div>
+                    <div class="stat-value">${Math.round(schedule.length / actualStudyDays * 10) / 10}과목</div>
+                </div>
+            `;
+
+            let tableHTML = `
+                <thead>
+                    <tr style="background: linear-gradient(135deg, var(--header-color-light), var(--header-color-dark));">
+                        <th style="padding: 10px; border: 1px solid #ddd; color: white;">과목</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; color: white;">회독 체크</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; color: white;">총 범위</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; color: white;">학습 일수</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; color: white;">일일 평균</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; color: white;">진도 배분</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            Object.keys(subjectStats).forEach((subject) => {
+                const stats = subjectStats[subject];
+                const subjectData = subjects.find(s => s.name === subject);
+                const totalRange = subjectData ? calculateTotalPages(subjectData) : '-';
+                const avgPages = stats.days > 0 ? Math.round(totalRange / (stats.days - stats.reviewDays) * 10) / 10 : 0;
+                const distributionType = subjectData?.pattern?.distributionType === 'sequential' ? '순차 배분' : '균등 분산';
+                
+                let checkboxes = '';
+                for (let i = 1; i <= 5; i++) {
+                    const checked = stats.rounds.has(i) ? 'checked' : '';
+                    checkboxes += `<input type="checkbox" ${checked} disabled> ${i} `;
+                }
+                
+                tableHTML += `
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${subject}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${checkboxes}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${totalRange}${getUnitLabel(stats.unitType)}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${stats.days}일</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">약 ${avgPages}${getUnitLabel(stats.unitType)}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${distributionType}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody>';
+            summaryTable.innerHTML = tableHTML;
+        }
+
+        // 유틸리티 함수들
+        function getUnitLabel(unitType) {
+            const labels = { 'page': '페이지', 'lesson': '강', 'number': '번', 'day': 'Day' };
+            return labels[unitType] || '페이지';
+        }
+
+        function getUnitAbbr(unitType) {
+            const abbrs = { 'page': 'p', 'lesson': '강', 'number': '번', 'day': 'D' };
+            return abbrs[unitType] || 'p';
+        }
+
+        function getSubjectAbbr(name) {
+            const abbrs = {
+                '인셉션 독해': '인독',
+                '인셉션 문학 개념어': '인문',
+                '문학 네오': '문네',
+                '사본 입텐트': '사입',
+                '강기분 화작 강민철': '강화강'
+            };
+            
+            for (let key in abbrs) {
+                if (name.includes(key)) return abbrs[key];
+            }
+            
+            return name.length > 5 ? name.substring(0, 5) : name;
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // 설정 패널 함수들
+        function updateHeaderColor() {
+            const color = document.getElementById('headerColor').value;
+            document.body.className = `header-${color}`;
+        }
+
+        function updateCalendarStyle() {
+            if (schedule.length > 0) {
+                displayCalendar();
+            }
+        }
+
+        function updateFontSize() {
+            const size = document.getElementById('fontSize').value;
+            const root = document.documentElement;
+            root.style.setProperty('--current-font-size', `var(--font-${size})`);
+        }
+
+        function togglePrintMode() {
+            isPrintMode = document.getElementById('printMode').checked;
+            if (schedule.length > 0) {
+                displayCalendar();
+            }
+        }
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            // 기본 날짜 설정
+            const today = new Date();
+            const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
+            document.getElementById('globalStartDate').value = formatDate(today);
+            document.getElementById('globalEndDate').value = formatDate(nextMonth);
+            
+            addSubject();
+        });
+    </script>
+</body>
+</html>
