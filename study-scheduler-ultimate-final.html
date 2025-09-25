@@ -1293,45 +1293,41 @@
         function calculateScheduleForSubject(subject, studyDates, totalPages) {
             const scheduleData = [];
             const pattern = subject.pattern;
-            
-            // 범위별 시작 페이지 계산
-            const ranges = [];
-            subject.ranges.forEach(range => {
-                if (range.start && range.end) {
-                    ranges.push({
-                        start: parseInt(range.start),
-                        end: parseInt(range.end)
-                    });
-                }
-            });
-            
+
+            const ranges = subject.ranges
+                .filter(r => r.start && r.end)
+                .map(r => ({ start: parseInt(r.start), end: parseInt(r.end) }));
+
             if (ranges.length === 0) return scheduleData;
-            
-            // 회독별 기간 분배
-            const periods = calculateRoundPeriods(studyDates.length, pattern.rounds);
-            
-            // 각 회독별로 스케줄 생성
-            periods.forEach(period => {
-                const roundDates = studyDates.slice(period.startDay - 1, period.endDay);
-                const roundSchedule = generateRoundSchedule(
-                    roundDates, 
-                    totalPages, 
-                    ranges, 
-                    period.round,
+
+            let remainingDates = [...studyDates];
+
+            for (let round = 1; round <= pattern.rounds; round++) {
+                if (remainingDates.length === 0) break;
+
+                const result = generateRoundSchedule(
+                    remainingDates,
+                    totalPages,
+                    ranges,
+                    round,
                     pattern.distributionType,
                     pattern.dailyAmount
                 );
-                scheduleData.push(...roundSchedule);
-            });
-            
+
+                scheduleData.push(...result.schedule);
+
+                // 사용된 날짜를 제외하고 남은 날짜를 업데이트
+                remainingDates = remainingDates.slice(result.daysUsed);
+            }
+
             // 복습일 처리 (1회독에서만)
             if (pattern.reviewDates.length > 0 && pattern.rounds === 1) {
                 addReviewSchedule(scheduleData, pattern.reviewDates);
             }
-            
+
             // 날짜순 정렬
             scheduleData.sort((a, b) => new Date(a.date) - new Date(b.date));
-            
+
             return scheduleData;
         }
 
@@ -1465,7 +1461,7 @@
                 }
             }
             
-            return roundSchedule;
+            return { schedule: roundSchedule, daysUsed: roundSchedule.length };
         }
 
         // 복습 일정 추가
@@ -1727,33 +1723,31 @@
             calculation += `• 분배방식: ${pattern.distributionType === 'equal' ? '균등분산' : '순차배분'} (${pattern.rounds}회독)\n`;
             
             // 2. 총학습기간 중 실제학습일
-            calculation += `• 총학습기간 중 실제학습일: 총 ${totalDays}일 기간 중 실제 학습일 ${studyDates.length}일\n`;
+            const actualStudyDays = scheduleData.filter(d => !d.isReview).length;
+            calculation += `• 총학습기간 중 실제학습일: 총 ${totalDays}일 기간 중 실제 학습일 ${actualStudyDays}일\n`;
             
             // 3. 학습범위
             const rangeText = subject.ranges.map(r => `${r.start}-${r.end}`).join(' + ');
             const totalContent = totalPages * pattern.rounds;
             calculation += `• 학습범위: 총 ${totalPages}${unitLabel} × ${pattern.rounds}회독 = ${totalContent}${unitLabel} (${rangeText})\n`;
             
-            // 4. 회독별 기간
-            if (pattern.rounds > 1) {
-                const periods = calculateRoundPeriods(studyDates.length, pattern.rounds);
-                const periodText = periods.map(p => `${p.round}회독 ${p.days}일`).join(', ');
-                calculation += `• 회독별 기간: ${periodText}\n`;
-            } else {
-                calculation += `• 회독별 기간: 1회독 ${studyDates.length}일\n`;
-            }
+            // 4. 회독별 기간 (실제 데이터 기반)
+            const roundDays = {};
+            scheduleData.filter(d => !d.isReview).forEach(d => {
+                roundDays[d.round] = (roundDays[d.round] || 0) + 1;
+            });
+            const periodText = Object.keys(roundDays).map(r => `${r}회독 ${roundDays[r]}일`).join(', ');
+            calculation += `• 회독별 기간: ${periodText}\n`;
+
+            // 5. 회독별 일평균 (실제 데이터 기반)
+            const avgText = Object.keys(roundDays).map(r => {
+                const days = roundDays[r];
+                if (days === 0) return `${r}회독 0${unitLabel}/일`;
+                return `${r}회독 ${(totalPages / days).toFixed(1)}${unitLabel}/일`;
+            }).join(', ');
+            calculation += `• 회독별 일평균: ${avgText || '계산 불가'}\n`;
             
-            // 5. 회독별 일평균
-            if (pattern.rounds > 1) {
-                const periods = calculateRoundPeriods(studyDates.length, pattern.rounds);
-                const avgText = periods.map(p => `${p.round}회독 ${(totalPages / p.days).toFixed(1)}${unitLabel}/일`).join(', ');
-                calculation += `• 회독별 일평균: ${avgText}\n`;
-            } else {
-                const dailyAvg = totalPages / studyDates.length;
-                calculation += `• 회독별 일평균: 1회독 ${dailyAvg.toFixed(1)}${unitLabel}/일\n`;
-            }
-            
-            // 6. 분배방식
+            // 6. 분배방식 상세
             if (pattern.distributionType === 'equal') {
                 calculation += `• 분배방식: 각 회독마다 전체 내용 반복, 주단위 계산 후 주내 분배\n`;
             } else {
