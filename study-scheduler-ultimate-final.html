@@ -1011,19 +1011,32 @@
             const ratios = getRoundRatios(rounds);
             const periods = [];
             let dayOffset = 0;
-            
+            let calculatedDays = 0;
+
             ratios.forEach((ratio, index) => {
-                const roundDays = Math.ceil(totalDays * ratio);
+                // Math.round를 사용하여 반올림
+                const roundDays = Math.round(totalDays * ratio);
+                calculatedDays += roundDays;
                 periods.push({
                     round: index + 1,
-                    startDay: dayOffset + 1,
-                    endDay: dayOffset + roundDays,
-                    days: roundDays,
+                    days: roundDays, // startDay, endDay는 나중에 결정
                     ratio: ratio
                 });
-                dayOffset += roundDays;
             });
+
+            // 반올림 오차 보정: 총합이 totalDays와 다를 경우, 마지막 회독 기간으로 보정
+            const diff = totalDays - calculatedDays;
+            if (diff !== 0 && periods.length > 0) {
+                periods[periods.length - 1].days += diff;
+            }
             
+            // startDay, endDay 최종 계산
+            periods.forEach(period => {
+                period.startDay = dayOffset + 1;
+                period.endDay = dayOffset + period.days;
+                dayOffset += period.days;
+            });
+
             return periods;
         }
 
@@ -1300,24 +1313,27 @@
 
             if (ranges.length === 0) return scheduleData;
 
+            // 이론적인 회독별 기간 계산
+            const theoreticalPeriods = calculateRoundPeriods(studyDates.length, pattern.rounds);
             let remainingDates = [...studyDates];
 
-            for (let round = 1; round <= pattern.rounds; round++) {
+            for (const period of theoreticalPeriods) {
                 if (remainingDates.length === 0) break;
 
                 const result = generateRoundSchedule(
                     remainingDates,
                     totalPages,
                     ranges,
-                    round,
+                    period.round,
                     pattern.distributionType,
-                    pattern.dailyAmount
+                    pattern.dailyAmount,
+                    period.days // 이론적인 기간 전달
                 );
 
                 scheduleData.push(...result.schedule);
 
-                // 사용된 날짜를 제외하고 남은 날짜를 업데이트
-                remainingDates = remainingDates.slice(result.daysUsed);
+                // 실제 사용된 날짜만큼만 제외
+                remainingDates.splice(0, result.daysUsed);
             }
 
             // 복습일 처리 (1회독에서만)
@@ -1332,20 +1348,20 @@
         }
 
         // 회독별 스케줄 생성
-        function generateRoundSchedule(roundDates, totalPages, ranges, round, distributionType, dailyAmount) {
+        function generateRoundSchedule(roundDates, totalPages, ranges, round, distributionType, dailyAmount, idealDaysInRound) {
             const roundSchedule = [];
             
             if (distributionType === 'equal') {
                 // 균등 분산
-                const dailyAverage = totalPages / roundDates.length;
+                const dailyAverage = idealDaysInRound > 0 ? totalPages / idealDaysInRound : totalPages;
                 let actualDates = roundDates;
                 
                 if (dailyAverage < 1.0) {
-                    const neededDays = totalPages;
+                    const neededDays = Math.min(totalPages, roundDates.length);
                     actualDates = roundDates.slice(0, neededDays);
                 }
                 
-                if (actualDates.length === 0) return roundSchedule;
+                if (actualDates.length === 0) return { schedule: [], daysUsed: 0 };
                 
                 // 페이지 분배
                 let currentRangeIndex = 0;
@@ -1737,7 +1753,7 @@
                 roundDays[d.round] = (roundDays[d.round] || 0) + 1;
             });
             const periodText = Object.keys(roundDays).map(r => `${r}회독 ${roundDays[r]}일`).join(', ');
-            calculation += `• 회독별 기간: ${periodText}\n`;
+            calculation += `• 회독별 기간: ${periodText || '계산 불가'}\n`;
 
             // 5. 회독별 일평균 (실제 데이터 기반)
             const avgText = Object.keys(roundDays).map(r => {
